@@ -62,11 +62,11 @@ if __name__ == "__main__":
     set("team", "Alejandro, Gabriel, Jorge")
     print("Get team:", get("team"))
     
-    # 2. Add Pepe
-    set("student", "Pepe")
+    # 2. Add Miguel
+    set("student", "Miguel")
     print("Get student (added):", get("student"))
     
-    # 3. Delete Pepe using tombstone
+    # 3. Delete Miguel using tombstone
     delete("student")
     print("Get student (after delete):", get("student"))
     
