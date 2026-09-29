@@ -34,8 +34,8 @@ Deletions are recorded as **tombstones**: special records appended to the log th
 | Name |
 |------|
 | Alejandro Blanco Rodríguez |
-| Gabriel Calvo |
-| Jorge Tort |
+| Gabriel Calvo Ballesteros |
+| Jorge Tort Soler |
 
 Software Engineering course, UDIT.
 
