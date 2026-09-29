@@ -3,7 +3,7 @@
 **Project:** Ultralightweight key-value database in Python
 **Course:** Software Engineering — UDIT
 **Methodology:** Scrum / Agile (User Stories following the INVEST criteria)
-**Document version:** 1.0
+**Document version:** 1.0.
 
 ---
 
