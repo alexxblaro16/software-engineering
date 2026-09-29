@@ -1,0 +1,8 @@
+team,Alejandro, Gabriel, Jorge
+team,__DELETED__
+team,Alejandro, Gabriel, Jorge
+student,Pepe
+student,__DELETED__
+team,Alejandro, Gabriel, Jorge
+student,Pepe
+student,__DELETED__
