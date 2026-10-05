@@ -54,7 +54,11 @@ def delete(key):
         del INDEX[key]
 
 
+<<<<<<< HEAD
 # --- TEST WITH MIGUEL ---
+=======
+# --- TEST WITH Paco ---
+>>>>>>> ea956511a8641b1b9b21fbe7964dce2eafed0549
 if __name__ == "__main__":
     build_index()  # Build index on startup
     
@@ -62,11 +66,11 @@ if __name__ == "__main__":
     set("team", "Alejandro, Gabriel, Jorge")
     print("Get team:", get("team"))
     
-    # 2. Add Miguel
-    set("student", "Miguel")
+    # 2. Add Paco
+    set("student", "Paco")
     print("Get student (added):", get("student"))
     
-    # 3. Delete Miguel using tombstone
+    # 3. Delete Paco using tombstone
     delete("student")
     print("Get student (after delete):", get("student"))
     
