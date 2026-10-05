@@ -6,6 +6,7 @@ INDEX = {}
 
 def build_index():
     """Reads the file once on startup to build the hash map index."""
+    INDEX.clear()
     if not os.path.exists(DB_FILE):
         return
     
@@ -54,11 +55,7 @@ def delete(key):
         del INDEX[key]
 
 
-<<<<<<< HEAD
-# --- TEST WITH MIGUEL ---
-=======
-# --- TEST WITH Paco ---
->>>>>>> ea956511a8641b1b9b21fbe7964dce2eafed0549
+# --- TEST BLOCK ---
 if __name__ == "__main__":
     build_index()  # Build index on startup
     
@@ -66,11 +63,11 @@ if __name__ == "__main__":
     set("team", "Alejandro, Gabriel, Jorge")
     print("Get team:", get("team"))
     
-    # 2. Add Paco
-    set("student", "Paco")
+    # 2. Add student
+    set("student", "Miguel")
     print("Get student (added):", get("student"))
     
-    # 3. Delete Paco using tombstone
+    # 3. Delete student using tombstone
     delete("student")
     print("Get student (after delete):", get("student"))
     
