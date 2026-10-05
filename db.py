@@ -54,7 +54,7 @@ def delete(key):
         del INDEX[key]
 
 
-# --- TEST WITH PEPE ---
+# --- TEST WITH MIGUEL ---
 if __name__ == "__main__":
     build_index()  # Build index on startup
     
