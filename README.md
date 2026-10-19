@@ -127,7 +127,7 @@ To leave the virtual environment, run `deactivate`.
 ## Usage Example
 
 ```python
-from db import Database  # adjust the import to the actual class name in db.py
+from pykv import Database
 
 db = Database("data.log")
 
@@ -178,11 +178,14 @@ flake8           # check style and common errors
 
 ```
 .
-├── db.py            # Core engine: append-only log, in-memory hash index, set/get/delete
+├── pykv/            # PyKV module
+│   ├── __init__.py
+│   └── database.py  # Database class: append-only log, in-memory hash index, set/get/delete
 ├── tests/           # Automated tests (pytest)
 │   └── test_db.py
 ├── BACKLOG.md       # Product backlog: user stories and acceptance criteria
 ├── requirements.txt # Development dependencies (pytest, black, flake8)
+├── .github/         # CI workflow (GitHub Actions) and CODEOWNERS
 ├── .gitignore       # Files ignored by Git (e.g. venv/, __pycache__/, data files)
 └── README.md        # Project documentation (this file)
 ```
