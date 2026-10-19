@@ -72,7 +72,7 @@ def test_append_only_growth(temp_db):
 
 
 def test_delete_non_existent_key(temp_db):
-    """Check that deleting a non-existent key does nothing or fails safely without creating file errors."""
+    """Check that deleting a non-existent key fails safely without errors."""
     db.delete("ghost_key")
     assert db.get("ghost_key") is None
 
