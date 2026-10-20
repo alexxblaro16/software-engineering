@@ -99,6 +99,13 @@ def test_build_index_respects_tombstones(db):
 
 
 def test_build_index_missing_file(tmp_path):
-    """Check that opening a database whose file does not exist starts empty."""
-    db = Database(tmp_path / "non_existent_file.txt")
+    """Check that opening a database whose file does not exist creates it."""
+    # Arrange
+    path = tmp_path / "non_existent_file.txt"
+
+    # Act
+    db = Database(path)
+
+    # Assert
+    assert path.exists()
     assert db.index == {}

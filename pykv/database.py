@@ -14,6 +14,8 @@ class Database:
         """Reads the file once on startup to build the hash map index."""
         self.index.clear()
         if not os.path.exists(self.path):
+            # First start: create an empty log file so the database is ready
+            open(self.path, "w", encoding="utf-8").close()
             return
 
         with open(self.path, "r", encoding="utf-8") as f:
