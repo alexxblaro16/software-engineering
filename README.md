@@ -56,17 +56,15 @@ Software Engineering course, UDIT.
 
 ### Prerequisites
 
-- [Python 3](https://www.python.org/downloads/) (see the course/project documentation for the supported version)
+- [Python 3.12](https://www.python.org/downloads/) or newer (the CI runs on 3.12)
 - [Git](https://git-scm.com/downloads)
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-organization-or-user>/<repository-name>.git
-cd <repository-name>
+git clone https://github.com/alexxblaro16/software-engineering.git
+cd software-engineering
 ```
-
-> Replace the URL with the address of your team's GitHub repository.
 
 ### 2. Create a virtual environment
 
@@ -111,12 +109,6 @@ The project uses the following development tools:
 Install them with:
 
 ```bash
-pip install pytest black flake8
-```
-
-Or, if the repository includes a `requirements.txt` file:
-
-```bash
 pip install -r requirements.txt
 ```
 
@@ -127,7 +119,7 @@ To leave the virtual environment, run `deactivate`.
 ## Usage Example
 
 ```python
-from db import Database  # adjust the import to the actual class name in db.py
+from pykv import Database
 
 db = Database("data.log")
 
@@ -178,16 +170,29 @@ flake8           # check style and common errors
 
 ```
 .
-├── db.py            # Core engine: append-only log, in-memory hash index, set/get/delete
+├── pykv/            # PyKV module
+│   ├── __init__.py
+│   └── database.py  # Database class: append-only log, in-memory hash index, set/get/delete
 ├── tests/           # Automated tests (pytest)
 │   └── test_db.py
 ├── BACKLOG.md       # Product backlog: user stories and acceptance criteria
 ├── requirements.txt # Development dependencies (pytest, black, flake8)
+├── .github/         # CI workflow (GitHub Actions) and CODEOWNERS
 ├── .gitignore       # Files ignored by Git (e.g. venv/, __pycache__/, data files)
 └── README.md        # Project documentation (this file)
 ```
 
-> Update this map if files are added, renamed or moved.
+
+---
+
+## Contributing
+
+Nobody pushes directly to `main`. Every change follows the same steps:
+
+1. Create a branch for the task, named after the commit type (`feat/...`, `fix/...`, `docs/...`, `test/...`).
+2. Commit using Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `ci:`).
+3. Push the branch and open a Pull Request. GitHub Actions runs flake8 and pytest on it.
+4. Another team member reviews it. Once the CI is green and it is approved, it is merged and the branch is deleted.
 
 ---
 
