@@ -18,26 +18,25 @@ class Database:
             open(self.path, "w", encoding="utf-8").close()
             return
 
-        with open(self.path, "r", encoding="utf-8") as f:
-            while True:
-                offset = f.tell()  # Save byte position before reading the line
-                line = f.readline()
-                if not line:
-                    break
+        offset = 0  # Byte position where the current line starts
+        with open(self.path, "rb") as f:
+            for raw_line in f:
+                line_offset = offset
+                offset += len(raw_line)  # The next line starts after this one
 
-                parts = line.strip().split(",", 1)
+                parts = raw_line.decode("utf-8").strip().split(",", 1)
                 if len(parts) == 2:
                     key, value = parts
                     if value == "__DELETED__":
                         self.index.pop(key, None)  # Tombstone: remove from index
                     else:
-                        self.index[key] = offset  # Save the latest position
+                        self.index[key] = line_offset  # Save the latest position
 
     def set(self, key, value):
         """Appends data to the file and updates the hash map."""
-        with open(self.path, "a", encoding="utf-8") as f:
-            offset = f.tell()  # Get current byte position
-            f.write(f"{key},{value}\n")
+        with open(self.path, "ab") as f:
+            offset = f.tell()  # Byte position at the end of the file
+            f.write(f"{key},{value}\n".encode("utf-8"))
 
         self.index[key] = offset  # Update hash map
 
@@ -47,16 +46,17 @@ class Database:
             return None
 
         offset = self.index[key]
-        with open(self.path, "r", encoding="utf-8") as f:
+        with open(self.path, "rb") as f:
             f.seek(offset)  # Jump directly to the exact byte position
-            _, value = f.readline().strip().split(",", 1)
+            line = f.readline().decode("utf-8")
+            _, value = line.strip().split(",", 1)
             return value
 
     def delete(self, key):
         """Deletes by writing a tombstone and removing it from the hash map."""
         if key in self.index:
-            with open(self.path, "a", encoding="utf-8") as f:
-                f.write(f"{key},__DELETED__\n")
+            with open(self.path, "ab") as f:
+                f.write(f"{key},__DELETED__\n".encode("utf-8"))
             del self.index[key]
 
 
