@@ -58,23 +58,3 @@ class Database:
             with open(self.path, "a", encoding="utf-8") as f:
                 f.write(f"{key},__DELETED__\n")
             del self.index[key]
-
-
-# --- TEST BLOCK ---
-if __name__ == "__main__":
-    db = Database()
-
-    # 1. Test team
-    db.set("team", "Alejandro, Gabriel, Jorge")
-    print("Get team:", db.get("team"))
-
-    # 2. Add student
-    db.set("student", "Miguel")
-    print("Get student (added):", db.get("student"))
-
-    # 3. Delete student using tombstone
-    db.delete("student")
-    print("Get student (after delete):", db.get("student"))
-
-    # 4. Check final team
-    print("Get final team:", db.get("team"))
