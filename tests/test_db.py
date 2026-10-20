@@ -109,4 +109,3 @@ def test_build_index_missing_file(tmp_path):
     # Assert
     assert path.exists()
     assert db.index == {}
-
