@@ -109,3 +109,17 @@ def test_build_index_missing_file(tmp_path):
     # Assert
     assert path.exists()
     assert db.index == {}
+
+
+def test_build_index_many_keys_with_multibyte(db):
+    """Check that offsets stay right after a restart with many multibyte keys."""
+    # Arrange
+    for i in range(100):
+        db.set(f"clave_{i}", f"valor_ñ_Привет_{i}")
+
+    # Act
+    reopened = Database(db.path)
+
+    # Assert
+    assert reopened.get("clave_0") == "valor_ñ_Привет_0"
+    assert reopened.get("clave_99") == "valor_ñ_Привет_99"
