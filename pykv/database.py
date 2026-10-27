@@ -33,7 +33,7 @@ class Database:
                 line_offset = offset
                 offset += len(raw_line)  # The next line starts after this one
 
-                parts = raw_line.decode("utf-8").strip().split(",", 1)
+                parts = raw_line.decode("utf-8").rstrip("\r\n").split(",", 1)
                 if len(parts) == 2:
                     key, value = parts
                     if value == "__DELETED__":
@@ -60,7 +60,7 @@ class Database:
         with open(self.path, "rb") as f:
             f.seek(offset)  # Jump directly to the exact byte position
             line = f.readline().decode("utf-8")
-            _, value = line.strip().split(",", 1)
+            _, value = line.rstrip("\r\n").split(",", 1)
             return value
 
     def delete(self, key):
