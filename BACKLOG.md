@@ -35,14 +35,16 @@ The requirements use qualitative terms ("massive", "extremely important"). To ma
 
 ## 4. Definition of Done (DoD)
 
-A story is considered done when:
+A task or story is done when we can answer "yes" to all of these questions:
 
-1. The code is merged into the main branch through a Pull Request reviewed by at least one teammate.
-2. All acceptance criteria are covered by automated tests that pass.
-3. The tests do not reduce overall coverage below the threshold agreed by the team.
-4. The code follows the PEP 8 style guide.
-5. Documentation (README and docstrings) is up to date.
-6. The Product Owner has validated the story in the sprint review.
+1. Has it been merged into `main` through a Pull Request?
+2. Is the CI (flake8 + pytest) green on that Pull Request?
+3. Does the new code have its own tests, following Arrange, Act, Assert?
+4. Has another team member reviewed and approved it?
+5. Do the branch name and the commits follow Conventional Commits (`feat`, `fix`, `test`, `docs`...)?
+6. If it changes how PyKV is used, has the README been updated?
+
+The Definition of Done is the same for every task. The acceptance criteria in section 6 are different: each one belongs to a single story and checks what the client asked for.
 
 ---
 
