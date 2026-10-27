@@ -137,6 +137,9 @@ print(db.get("greeting"))   # None (key no longer available)
 
 - Keys must be non-empty strings with no commas and no line breaks. If not, `set`, `get` and `delete` raise a `TypeError` or a `ValueError` with a clear message, and nothing is written to the log.
 
+- Values must be strings with no line breaks. `__DELETED__` cannot be used as a value, because the log uses it to mark deleted keys (tombstones).
+
+
 ---
 
 ## Running Tests
