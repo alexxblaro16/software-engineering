@@ -133,6 +133,10 @@ db.delete("greeting")       # a tombstone is appended to the log
 print(db.get("greeting"))   # None (key no longer available)
 ```
 
+### Rules for keys and values
+
+- Keys must be non-empty strings with no commas and no line breaks. If not, `set`, `get` and `delete` raise a `TypeError` or a `ValueError` with a clear message, and nothing is written to the log.
+
 ---
 
 ## Running Tests
