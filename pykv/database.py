@@ -10,6 +10,15 @@ class Database:
         self.index = {}
         self.build_index()
 
+    def _check_key(self, key):
+        """Raises a clear error if the key cannot be stored in the log."""
+        if not isinstance(key, str):
+            raise TypeError("The key must be a string")
+        if key == "":
+            raise ValueError("The key cannot be empty")
+        if "," in key or "\n" in key or "\r" in key:
+            raise ValueError("The key cannot contain commas or line breaks")
+
     def build_index(self):
         """Reads the file once on startup to build the hash map index."""
         self.index.clear()
@@ -34,6 +43,7 @@ class Database:
 
     def set(self, key, value):
         """Appends data to the file and updates the hash map."""
+        self._check_key(key)
         with open(self.path, "ab") as f:
             offset = f.tell()  # Byte position at the end of the file
             f.write(f"{key},{value}\n".encode("utf-8"))
@@ -42,6 +52,7 @@ class Database:
 
     def get(self, key):
         """Retrieves data using the hash map and seek() (no full file scan)."""
+        self._check_key(key)
         if key not in self.index:
             return None
 
@@ -54,6 +65,7 @@ class Database:
 
     def delete(self, key):
         """Deletes by writing a tombstone and removing it from the hash map."""
+        self._check_key(key)
         if key in self.index:
             with open(self.path, "ab") as f:
                 f.write(f"{key},__DELETED__\n".encode("utf-8"))
