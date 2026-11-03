@@ -396,3 +396,56 @@ Initial story point estimates proposed by Jorge using the Fibonacci scale (1, 2,
 | The whole index must fit in memory | Limit on older machines | Document the maximum supported volume (AC-07.3) |
 | Guaranteeing persistence may affect latency | Risk to the 500 ms target | Measure both objectives together in the US-01 and US-04 tests |
 | Poorly defined qualitative requirements | Rework | Validate the assumptions in section 3 in the first review with the client |
+
+---
+
+## 9. System Requirements for the Must Stories
+
+The user stories in section 6 say what the client needs. These requirements say exactly what the system does, so that whoever programs or tests it does not have to fill in the gaps. Each one answers one of three questions (inputs and outputs, errors, limits) and can be checked with a yes or a no.
+
+The tests in the last column are in `tests/`. `test_sr_*` tests are in `tests/test_system_requirements.py`.
+
+### US-06 — Simple API for Python Programmers
+
+| ID | Type | Requirement | Checked by |
+|----|------|-------------|------------|
+| SR-06.1 | Inputs and outputs | `set(key, value)` stores a string under a string key, and `get(key)` returns the last value stored for that key. | `test_set_and_get`, `test_update_value` |
+| SR-06.2 | Inputs and outputs | `get` on a key that does not exist returns `None`. `delete` on a key that does not exist raises nothing and writes nothing. | `test_non_existent_key`, `test_sr_06_2_delete_of_unknown_key_writes_nothing` |
+| SR-06.3 | Errors | A key that is not a string raises `TypeError`. An empty key, or one with a comma or a line break, raises `ValueError`. `set`, `get` and `delete` all apply this, and nothing is written to the log. | `tests/test_validation.py` |
+| SR-06.4 | Errors | In `set`, a value that is not a string raises `TypeError`, and a value with a line break raises `ValueError`. | `test_value_that_is_not_a_string_is_rejected`, `test_value_with_line_break_is_rejected` (PR #16) |
+| SR-06.5 | Limits | The code in `pykv/` imports only the Python standard library. | `test_sr_06_5_runtime_code_only_uses_the_standard_library` |
+
+### US-05 — Append-only Historical Log with Tombstones
+
+| ID | Type | Requirement | Checked by |
+|----|------|-------------|------------|
+| SR-05.1 | Inputs and outputs | Each `set` appends exactly one line, `key,value\n`, encoded in UTF-8, to the end of the log. | `test_sr_05_1_set_appends_one_utf8_line` |
+| SR-05.2 | Inputs and outputs | `set` on an existing key leaves every byte already in the log unchanged. | `test_sr_05_2_update_keeps_the_previous_bytes` |
+| SR-05.3 | Inputs and outputs | `delete` on an existing key appends the line `key,__DELETED__\n` and leaves every byte already in the log unchanged. | `test_sr_05_3_delete_appends_a_tombstone` |
+| SR-05.4 | Inputs and outputs | Read from start to end, the log shows the operations in the order in which they were performed. | `test_sr_05_4_log_keeps_the_order_of_the_operations` |
+| SR-05.5 | Errors | `set` with the value `__DELETED__` raises `ValueError`, because that value is reserved for tombstones. | `test_tombstone_value_is_rejected` (PR #16) |
+
+### US-02 — In-memory Hash Index for Large Volumes
+
+| ID | Type | Requirement | Checked by |
+|----|------|-------------|------------|
+| SR-02.1 | Inputs and outputs | For each live key, the index stores the position in bytes (not characters) where its latest record starts. | `test_sr_02_1_index_stores_the_byte_offset_of_the_last_record` |
+| SR-02.2 | Inputs and outputs | `get` jumps with `f.seek()` to the position in the index and reads only that record. | `test_sr_02_2_get_reads_only_the_record_of_the_key` |
+| SR-02.3 | Inputs and outputs | After `delete`, the key is no longer in the index. | `test_sr_02_3_delete_removes_the_key_from_the_index` |
+| SR-02.4 | Inputs and outputs | Values with multibyte characters are returned complete. | `test_byte_offsets_multibyte`, `test_utf8_encoding_and_cyrillic` |
+| SR-02.5 | Limits | With 1,000,000 keys, the 99th percentile of `get`, measured over 1,000 reads, is under 500 ms. | `test_sr_02_5_get_is_fast_with_one_million_keys` |
+
+### US-03 — 24/7 Continuous Operation and Recovery After Restart
+
+| ID | Type | Requirement | Checked by |
+|----|------|-------------|------------|
+| SR-03.1 | Inputs and outputs | Opening an existing log rebuilds the index with no manual step, and each key returns its latest value. | `test_build_index_recovery`, `test_build_index_many_keys_with_multibyte` |
+| SR-03.2 | Inputs and outputs | After reopening, a key whose last record is a tombstone returns `None`. | `test_build_index_respects_tombstones` |
+| SR-03.3 | Errors | If the log file does not exist, opening the database creates it empty and raises nothing. | `test_build_index_missing_file` |
+| SR-03.4 | Errors | If the log cannot be written, `set` raises the `OSError` and the index does not change. | `test_sr_03_4_failed_write_raises_and_keeps_the_index` |
+| SR-03.5 | Limits | Opening a log with 1,000,000 records takes under 5 seconds. This value is our proposal and must be confirmed with the client (AC-03.3). | `test_sr_03_5_opens_one_million_records_in_under_5_seconds` |
+
+### What these requirements leave out
+
+- **Records cut by a crash:** if the process stops in the middle of a write, the last line can be incomplete. Today, the database can return a partial value, or fail to open with a `UnicodeDecodeError` if the cut falls inside a multibyte character. Handling this is AC-04.2 in US-04, which is Won't for this delivery.
+- **The 24-hour stability test (AC-03.1):** it has not been run, so it has no system requirement yet.
