@@ -123,3 +123,16 @@ def test_build_index_many_keys_with_multibyte(db):
     # Assert
     assert reopened.get("clave_0") == "valor_ñ_Привет_0"
     assert reopened.get("clave_99") == "valor_ñ_Привет_99"
+
+
+def test_spaces_at_the_edges_are_kept(db):
+    """Check that spaces at the start and end of a value are not lost."""
+    # Arrange
+    db.set("padded", " hello ")
+
+    # Act
+    reopened = Database(db.path)
+
+    # Assert
+    assert db.get("padded") == " hello "
+    assert reopened.get("padded") == " hello "
