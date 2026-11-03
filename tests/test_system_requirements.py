@@ -183,12 +183,13 @@ def test_sr_02_5_get_is_fast_with_one_million_keys(big_log):
     assert sorted(times)[int(READS * 0.99)] < 0.5
 
 
-def test_sr_03_4_failed_write_raises_and_keeps_the_index(db, tmp_path):
+def test_sr_03_4_failed_write_raises_and_keeps_the_index(db):
     """SR-03.4: if the log cannot be written, set raises and changes nothing."""
     # Arrange
     db.set("a", "1")
     index_before = dict(db.index)
-    db.path = str(tmp_path)  # A folder: opening it to write fails on every system
+    os.remove(db.path)
+    os.mkdir(db.path)  # A folder: opening it to write fails on every system
 
     # Act / Assert
     with pytest.raises(OSError):
