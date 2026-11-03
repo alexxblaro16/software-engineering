@@ -53,16 +53,29 @@ The Definition of Done is the same for every task. The acceptance criteria in se
 | ID | Story | Requirement | Priority (MoSCoW) | Points | Suggested sprint |
 |----|-------|-------------|-------------------|--------|------------------|
 | US-06 | Simple API for Python programmers | R4 | Must | 3 | 1 |
-| US-01 | Response in under 500 ms | R1 | Must | 5 | 1 |
 | US-05 | Append-only historical log and tombstones | R3 | Must | 5 | 1 |
 | US-02 | In-memory hash index for large volumes | R1 | Must | 5 | 2 |
 | US-03 | 24/7 continuous operation and recovery after restart | R2 | Must | 5 | 2 |
-| US-04 | Reliability against failures and integrity protection | R2 | Must | 8 | 3 |
-| US-07 | Multi-platform, older machines and UTF-8 encoding | R5 | Must | 5 | 3 |
+| US-01 | Response in under 500 ms | R1 | Should | 5 | 1 |
+| US-07 | Multi-platform, older machines and UTF-8 encoding | R5 | Should | 5 | 3 |
+| US-04 | Reliability against failures and integrity protection | R2 | Won't (this time) | 8 | - |
 
-*Estimates in story points (Fibonacci scale), to be refined in a Planning Poker session.*
+**Provisional MoSCoW check:** Must stories add up to 21 of 36 points (58.3%), below the 60% limit. US-07 is Won't for this delivery. Estimates are pending Planning Poker confirmation.
 
----
+
+### 5.1 Planning Poker
+
+Initial story point estimates proposed by Jorge using the Fibonacci scale (1, 2, 3, 5, 8, 13).
+
+| ID | Estimated points | Justification |
+|----|------------------|---------------|
+| US-06 | 3 | Simple Python API with basic CRUD operations |
+| US-05 | 5 | Persistent log and logical deletion |
+| US-02 | 5 | In-memory index for efficient access |
+| US-04 | 8 | Complex failure handling and data integrity |
+| US-03 | 5 | Recovery after restarting the database |
+| US-01 | 5 | Performance testing and optimization |
+| US-07 | 5 | Compatibility across platforms and UTF-8 |
 
 ## 6. User Stories
 
