@@ -73,9 +73,9 @@ Each team member voted the story points on their own with the Fibonacci scale (1
 | US-05 | 5 | 5 | 5 | 5 | Persistent log and logical deletion |
 | US-02 | 5 | 5 | 5 | 5 | In-memory index for efficient access |
 | US-03 | 5 | 5 | 5 | 5 | Recovery after restarting the database |
-| US-01 | 5 | 8 | 5 | 5 | Performance testing and optimization. Gabriel saw more risk in measuring 500 ms on older machines |
+| US-01 | 5 | 8 | 5 | 5 | Performance testing and optimization |
 | US-07 | 5 | 5 | 5 | 5 | Compatibility across platforms and UTF-8 |
-| US-04 | 8 | 13 | 8 | 8 | Complex failure handling and data integrity. Gabriel saw more risk in records cut by a crash |
+| US-04 | 8 | 13 | 8 | 8 | Complex failure handling and data integrity |
 
 US-01 stays as Should: as a Must it would take the Must total to 23 of 36 points (63.9%), above the 60% limit.
 
