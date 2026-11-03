@@ -60,7 +60,7 @@ The Definition of Done is the same for every task. The acceptance criteria in se
 | US-07 | Multi-platform, older machines and UTF-8 encoding | R5 | Should | 5 | 3 |
 | US-04 | Reliability against failures and integrity protection | R2 | Won't (this time) | 8 | - |
 
-**Provisional MoSCoW check:** Must stories add up to 21 of 36 points (58.3%), below the 60% limit. US-07 is Won't for this delivery. Estimates are pending Planning Poker confirmation.
+**MoSCoW check:** Must stories (US-06, US-05, US-02 and US-03) add up to 18 of 36 points (50%), below the 60% limit. US-04 is Won't for this delivery; US-01 and US-07 are Should. Estimates are pending Planning Poker confirmation by the whole team.
 
 
 ### 5.1 Planning Poker
@@ -386,7 +386,7 @@ Initial story point estimates proposed by Jorge using the Fibonacci scale (1, 2,
 | Sprint 0 | — | Repository, project structure, testing tools, CI, and decisions on Python versions and operating systems |
 | Sprint 1 | US-06, US-05, US-01 | Functional core: API, append-only log with tombstones and first performance measurement |
 | Sprint 2 | US-02, US-03 | Hash index with `f.seek()`, rebuild and continuous recovery |
-| Sprint 3 | US-04, US-07 | Robustness against failures and multi-platform compatibility with UTF-8 |
+| Sprint 3 | US-07 | Multi-platform compatibility with UTF-8 (US-04 is Won't for this delivery) |
 
 ## 8. Identified Risks
 
