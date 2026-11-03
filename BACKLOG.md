@@ -60,22 +60,24 @@ The Definition of Done is the same for every task. The acceptance criteria in se
 | US-07 | Multi-platform, older machines and UTF-8 encoding | R5 | Should | 5 | 3 |
 | US-04 | Reliability against failures and integrity protection | R2 | Won't (this time) | 8 | - |
 
-**MoSCoW check:** Must stories (US-06, US-05, US-02 and US-03) add up to 18 of 36 points (50%), below the 60% limit. US-04 is Won't for this delivery; US-01 and US-07 are Should. Estimates are pending Planning Poker confirmation by the whole team.
+**MoSCoW check:** Must stories (US-06, US-05, US-02 and US-03) add up to 18 of 36 points (50%), below the 60% limit. US-04 is Won't for this delivery; US-01 and US-07 are Should. The points come from the Planning Poker in section 5.1.
 
 
 ### 5.1 Planning Poker
 
-Initial story point estimates proposed by Jorge using the Fibonacci scale (1, 2, 3, 5, 8, 13).
+Each team member voted the story points on their own with the Fibonacci scale (1, 2, 3, 5, 8, 13). Where the votes did not match, the agreed value is the one chosen by two of the three members.
 
-| ID | Estimated points | Justification |
-|----|------------------|---------------|
-| US-06 | 3 | Simple Python API with basic CRUD operations |
-| US-05 | 5 | Persistent log and logical deletion |
-| US-02 | 5 | In-memory index for efficient access |
-| US-04 | 8 | Complex failure handling and data integrity |
-| US-03 | 5 | Recovery after restarting the database |
-| US-01 | 5 | Performance testing and optimization |
-| US-07 | 5 | Compatibility across platforms and UTF-8 |
+| ID | Alejandro | Gabriel | Jorge | Agreed | Justification |
+|----|-----------|---------|-------|--------|---------------|
+| US-06 | 3 | 3 | 3 | 3 | Simple Python API with basic CRUD operations |
+| US-05 | 5 | 5 | 5 | 5 | Persistent log and logical deletion |
+| US-02 | 5 | 5 | 5 | 5 | In-memory index for efficient access |
+| US-03 | 5 | 5 | 5 | 5 | Recovery after restarting the database |
+| US-01 | 5 | 8 | 5 | 5 | Performance testing and optimization. Gabriel saw more risk in measuring 500 ms on older machines |
+| US-07 | 5 | 5 | 5 | 5 | Compatibility across platforms and UTF-8 |
+| US-04 | 8 | 13 | 8 | 8 | Complex failure handling and data integrity. Gabriel saw more risk in records cut by a crash |
+
+US-01 stays as Should: as a Must it would take the Must total to 23 of 36 points (63.9%), above the 60% limit.
 
 ## 6. User Stories
 
