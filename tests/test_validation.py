@@ -60,3 +60,33 @@ def test_rejected_key_writes_nothing(db):
 
     # Assert
     assert os.path.getsize(db.path) == size_before
+
+
+def test_value_with_line_break_is_rejected(db):
+    """Check that a value with a line break raises a clear error."""
+    # Arrange
+    value = "line one\nline two"
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="line breaks"):
+        db.set("note", value)
+
+
+def test_tombstone_value_is_rejected(db):
+    """Check that the reserved tombstone marker cannot be stored as a value."""
+    # Arrange
+    value = "__DELETED__"
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="reserved"):
+        db.set("status", value)
+
+
+def test_value_that_is_not_a_string_is_rejected(db):
+    """Check that a number used as a value raises a TypeError."""
+    # Arrange
+    value = 42
+
+    # Act / Assert
+    with pytest.raises(TypeError, match="string"):
+        db.set("age", value)

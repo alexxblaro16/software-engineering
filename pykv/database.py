@@ -1,5 +1,8 @@
 import os
 
+# Value written to the log to mark a deleted key
+TOMBSTONE = "__DELETED__"
+
 
 class Database:
     """Key-value database stored in an append-only log file."""
@@ -19,6 +22,15 @@ class Database:
         if "," in key or "\n" in key or "\r" in key:
             raise ValueError("The key cannot contain commas or line breaks")
 
+    def _check_value(self, value):
+        """Raises a clear error if the value cannot be stored in the log."""
+        if not isinstance(value, str):
+            raise TypeError("The value must be a string")
+        if "\n" in value or "\r" in value:
+            raise ValueError("The value cannot contain line breaks")
+        if value == TOMBSTONE:
+            raise ValueError(f"{TOMBSTONE} is reserved to mark deleted keys")
+
     def build_index(self):
         """Reads the file once on startup to build the hash map index."""
         self.index.clear()
@@ -36,7 +48,7 @@ class Database:
                 parts = raw_line.decode("utf-8").strip().split(",", 1)
                 if len(parts) == 2:
                     key, value = parts
-                    if value == "__DELETED__":
+                    if value == TOMBSTONE:
                         self.index.pop(key, None)  # Tombstone: remove from index
                     else:
                         self.index[key] = line_offset  # Save the latest position
@@ -44,6 +56,7 @@ class Database:
     def set(self, key, value):
         """Appends data to the file and updates the hash map."""
         self._check_key(key)
+        self._check_value(value)
         with open(self.path, "ab") as f:
             offset = f.tell()  # Byte position at the end of the file
             f.write(f"{key},{value}\n".encode("utf-8"))
@@ -68,5 +81,5 @@ class Database:
         self._check_key(key)
         if key in self.index:
             with open(self.path, "ab") as f:
-                f.write(f"{key},__DELETED__\n".encode("utf-8"))
+                f.write(f"{key},{TOMBSTONE}\n".encode("utf-8"))
             del self.index[key]
