@@ -54,7 +54,11 @@ class Database:
                         self.index[key] = line_offset  # Save the latest position
 
     def set(self, key, value):
-        """Appends data to the file and updates the hash map."""
+        """Appends data to the file and updates the hash map.
+
+        Returns True once the record is written. Invalid input raises an
+        error before anything is written.
+        """
         self._check_key(key)
         self._check_value(value)
         with open(self.path, "ab") as f:
@@ -62,6 +66,7 @@ class Database:
             f.write(f"{key},{value}\n".encode("utf-8"))
 
         self.index[key] = offset  # Update hash map
+        return True
 
     def get(self, key):
         """Retrieves data using the hash map and seek() (no full file scan)."""
@@ -77,9 +82,15 @@ class Database:
             return value
 
     def delete(self, key):
-        """Deletes by writing a tombstone and removing it from the hash map."""
+        """Deletes by writing a tombstone and removing it from the hash map.
+
+        Returns True if the key existed and was deleted, and False if there
+        was nothing to delete (in that case nothing is written to the log).
+        """
         self._check_key(key)
-        if key in self.index:
-            with open(self.path, "ab") as f:
-                f.write(f"{key},{TOMBSTONE}\n".encode("utf-8"))
-            del self.index[key]
+        if key not in self.index:
+            return False
+        with open(self.path, "ab") as f:
+            f.write(f"{key},{TOMBSTONE}\n".encode("utf-8"))
+        del self.index[key]
+        return True
