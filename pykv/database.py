@@ -1,7 +1,4 @@
-import os
-
-# Value written to the log to mark a deleted key
-TOMBSTONE = "__DELETED__"
+from pykv.log import TOMBSTONE, Log
 
 
 class Database:
@@ -9,6 +6,7 @@ class Database:
 
     def __init__(self, path="db.txt"):
         self.path = str(path)
+        self.log = Log(self.path)
         # Hash map / Index in memory: stores { "key": byte_offset }
         self.index = {}
         self.build_index()
@@ -32,54 +30,30 @@ class Database:
             raise ValueError(f"{TOMBSTONE} is reserved to mark deleted keys")
 
     def build_index(self):
-        """Reads the file once on startup to build the hash map index."""
+        """Reads the log once on startup to build the hash map index."""
         self.index.clear()
-        if not os.path.exists(self.path):
-            # First start: create an empty log file so the database is ready
-            open(self.path, "w", encoding="utf-8").close()
-            return
-
-        offset = 0  # Byte position where the current line starts
-        with open(self.path, "rb") as f:
-            for raw_line in f:
-                line_offset = offset
-                offset += len(raw_line)  # The next line starts after this one
-
-                parts = raw_line.decode("utf-8").rstrip("\r\n").split(",", 1)
-                if len(parts) == 2:
-                    key, value = parts
-                    if value == TOMBSTONE:
-                        self.index.pop(key, None)  # Tombstone: remove from index
-                    else:
-                        self.index[key] = line_offset  # Save the latest position
+        for offset, key, value in self.log.records():
+            if value is None:
+                self.index.pop(key, None)  # Tombstone: remove from index
+            else:
+                self.index[key] = offset  # Save the latest position
 
     def set(self, key, value):
-        """Appends data to the file and updates the hash map."""
+        """Appends data to the log and updates the hash map."""
         self._check_key(key)
         self._check_value(value)
-        with open(self.path, "ab") as f:
-            offset = f.tell()  # Byte position at the end of the file
-            f.write(f"{key},{value}\n".encode("utf-8"))
-
-        self.index[key] = offset  # Update hash map
+        self.index[key] = self.log.append(key, value)
 
     def get(self, key):
-        """Retrieves data using the hash map and seek() (no full file scan)."""
+        """Retrieves data using the hash map (no full file scan)."""
         self._check_key(key)
         if key not in self.index:
             return None
-
-        offset = self.index[key]
-        with open(self.path, "rb") as f:
-            f.seek(offset)  # Jump directly to the exact byte position
-            line = f.readline().decode("utf-8")
-            _, value = line.rstrip("\r\n").split(",", 1)
-            return value
+        return self.log.read(self.index[key])
 
     def delete(self, key):
         """Deletes by writing a tombstone and removing it from the hash map."""
         self._check_key(key)
         if key in self.index:
-            with open(self.path, "ab") as f:
-                f.write(f"{key},{TOMBSTONE}\n".encode("utf-8"))
+            self.log.append_tombstone(key)
             del self.index[key]

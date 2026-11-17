@@ -179,7 +179,8 @@ flake8           # check style and common errors
 .
 ├── pykv/            # PyKV module
 │   ├── __init__.py
-│   └── database.py  # Database class: append-only log, in-memory hash index, set/get/delete
+│   ├── database.py  # Database class: in-memory hash index and set/get/delete
+│   └── log.py       # Log class: everything about the append-only log file
 ├── tests/           # Automated tests (pytest)
 │   └── test_db.py
 ├── BACKLOG.md       # Product backlog: user stories and acceptance criteria
