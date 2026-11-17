@@ -451,3 +451,63 @@ The tests in the last column are in `tests/`. `test_sr_*` tests are in `tests/te
 
 - **Records cut by a crash:** if the process stops in the middle of a write, the last line can be incomplete. Today, the database can return a partial value, or fail to open with a `UnicodeDecodeError` if the cut falls inside a multibyte character. Handling this is AC-04.2 in US-04, which is Won't for this delivery.
 - **The 24-hour stability test (AC-03.1):** it has not been run, so it has no system requirement yet.
+
+### Decisions that surprised our client
+
+Our client team opened two issues after using PyKV (#21 and #22). Each decision is written here as a system requirement, so the next client reads it before finding it by surprise.
+
+| ID | Type | Requirement | Why | Checked by |
+|----|------|-------------|-----|------------|
+| SR-06.6 | Inputs and outputs | `set` returns `True` once the record is written. `delete` returns `True` if the key existed and `False` if it did not. | Issue #21 (defect): the caller could not tell a real delete from a delete of a key that did not exist. Fixed in PR #23. | `tests/test_confirmation.py` |
+| SR-06.7 | Inputs and outputs | The log separates key and value with the first comma of each line. Keys cannot contain commas (SR-06.3), but values can, and they are returned complete, also after reopening the database. | Issue #22 (decision): the comma is a common character, but it is only forbidden in keys, so the format stays readable as plain text. | `test_sr_06_7_values_with_commas_survive_a_restart` |
+| SR-06.2 | Inputs and outputs | `get` on a key that does not exist returns `None` and does not raise `KeyError`. | Same contract as `dict.get`, the most common way to read a key in Python. | `test_non_existent_key` |
+
+---
+
+## 10. Closing E1
+
+E1 was delivered with the tag `v1.0` on `main` (commit `b3c7431`), with the CI green.
+
+### Estimated and completed points
+
+The plan for E1 was Sprints 1 to 3 of section 7. A story counts as completed only if all its system requirements in section 9 pass in `main`.
+
+| ID | Priority | Estimated points | Completed points | Status at the end of E1 |
+|----|----------|------------------|------------------|-------------------------|
+| US-06 | Must | 3 | 3 | Completed (SR-06.1 to SR-06.5) |
+| US-05 | Must | 5 | 5 | Completed (SR-05.1 to SR-05.5) |
+| US-02 | Must | 5 | 5 | Completed (SR-02.1 to SR-02.5) |
+| US-03 | Must | 5 | 5 | Completed (SR-03.1 to SR-03.5). The 24-hour test (AC-03.1) is left out, as section 9 says |
+| US-01 | Should | 5 | 0 | Not completed: `get` is measured with 1,000,000 keys (SR-02.5), but `set` and `delete` are not |
+| US-07 | Should | 5 | 0 | Not completed: UTF-8 is tested, but the CI only runs on Linux with Python 3.12, and older machines are not tested |
+| **Total** | | **28** | **18** | 64% of the plan |
+
+US-04 (Won't, 8 points) was not planned for E1.
+
+### Velocity
+
+E1 is our first real iteration, so our velocity is **18 points per iteration**: the four Must stories. We planned 28 points, so for E2 we should plan around 18 points instead of 28, and correct the number again with the data of E2.
+
+### Roles
+
+Roles rotate in every delivery, and everyone goes through every role during the course. The roles for E2 are agreed by the team at the start of E2 and recorded here.
+
+---
+
+## 11. Experiment: Log Growth With a Single Key
+
+**Question:** how much does the log grow when the same key is written many times, and how long does it take to rebuild the index?
+
+**How:** `experiments/log_growth.py` writes 1,000,000 values (`value-0` to `value-999999`) to the key `language` in a temporary file, and times `build_index()` with `time.perf_counter()`.
+
+| Measure | Result |
+|---------|--------|
+| Live keys in the index | 1 |
+| Log file size | 21,888,890 bytes (21.9 MB) |
+| Time to rebuild the index | 0.43 s (between 0.40 and 0.49 s in 5 more runs on the same file) |
+
+Measured on Windows 11, Python 3.13, a laptop with an Intel i7-13620H.
+
+**What it shows:** the database holds one value, but the log keeps all 1,000,000 records (about 22 bytes each), and opening the database reads all of them. The file and the startup time grow with the number of writes, not with the number of keys. This is the first risk of section 8. Compaction would fix it, but it would delete history that the client asked to keep (R3), so it has to be agreed with the client first.
+
+We also saw that writing the 1,000,000 records took about 400 s (0.4 ms per `set`), because every `set` opens and closes the file.
