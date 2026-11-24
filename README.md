@@ -210,6 +210,24 @@ flake8           # check style and common errors
 
 ---
 
+## How We Work
+
+We use **Scrum** with practices from **Extreme Programming**.
+
+- **Scrum:** we work in sprints that end with a delivery to the client (E1 with `v1.0`, E2 with `v2.0`). We have a Product Owner, a Scrum Master and developers, and roles rotate in every delivery. We estimate with Planning Poker, measure our velocity and close each sprint with a review and a retrospective (section 12 of [BACKLOG.md](BACKLOG.md)).
+- **Extreme Programming:** tests before the fix (regression tests), continuous integration with GitHub Actions, small pull requests reviewed by another member, and refactoring with the tests green (the `Log` class).
+
+These are our answers to the four questions for choosing a methodology:
+
+| Question | Our answer | What it means for us |
+|----------|------------|----------------------|
+| Do the requirements change? | Yes. Every session brings new requirements (segments, merge) and our client team opens issues that change the contract (#21, #22). | A short cycle with a review at the end of each sprint, so changes enter the backlog and not the middle of a task. That is why we use Scrum and not a plan made once at the start. |
+| How much does a failure cost? | Little money and no lives, but a wrong `get` or a lost key breaks the trust in a database. | We do not need to plan every test in advance as in the V-model, but every fix has a regression test and nothing enters `main` with the CI red. |
+| How many teams are there? | One team of three, plus the team that is our client. | We coordinate inside one Scrum team. We do not need Nexus. With our client team we talk through issues and pull requests. |
+| Is there an external supervisor? | Yes, the teacher checks each delivery by its tag. | Each requirement is traceable: user story, acceptance criteria, system requirement and the test that checks it (sections 9 and 12 of [BACKLOG.md](BACKLOG.md)). |
+
+---
+
 ## Contributing
 
 Nobody pushes directly to `main`. Every change follows the same steps:
@@ -223,4 +241,4 @@ Nobody pushes directly to `main`. Every change follows the same steps:
 
 ## Documentation
 
-The product backlog, with the user stories and acceptance criteria that drive the development of the project, is available in [BACKLOG.md](BACKLOG.md).
+The product backlog, with the user stories and acceptance criteria that drive the development of the project, is available in [BACKLOG.md](BACKLOG.md). The phase 2 backlog (E2) is in section 12.
