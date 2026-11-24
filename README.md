@@ -123,15 +123,26 @@ from pykv import Database
 
 db = Database("data.log")
 
-db.set("greeting", "Hello")
+db.set("greeting", "Hello")     # True: the record was written
 print(db.get("greeting"))   # Hello
 
 db.set("greeting", "Привет")  # modification: a new record is appended
 print(db.get("greeting"))   # Привет
 
-db.delete("greeting")       # a tombstone is appended to the log
+db.delete("greeting")       # True: a tombstone is appended to the log
 print(db.get("greeting"))   # None (key no longer available)
+db.delete("greeting")       # False: there was nothing to delete
 ```
+
+### What each operation returns
+
+| Operation | Returns | Writes to the log |
+|-----------|---------|-------------------|
+| `set(key, value)` | `True` once the record is written | One line, `key,value` |
+| `get(key)` | The latest value, or `None` if the key does not exist | Nothing |
+| `delete(key)` | `True` if the key existed, `False` if there was nothing to delete | A tombstone, only when it returns `True` |
+
+Invalid keys or values raise a `TypeError` or a `ValueError` before anything is written.
 
 ### Rules for keys and values
 

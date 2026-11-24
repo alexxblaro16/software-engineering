@@ -416,6 +416,7 @@ The tests in the last column are in `tests/`. `test_sr_*` tests are in `tests/te
 | SR-06.3 | Errors | A key that is not a string raises `TypeError`. An empty key, or one with a comma or a line break, raises `ValueError`. `set`, `get` and `delete` all apply this, and nothing is written to the log. | `tests/test_validation.py` |
 | SR-06.4 | Errors | In `set`, a value that is not a string raises `TypeError`, and a value with a line break raises `ValueError`. | `test_value_that_is_not_a_string_is_rejected`, `test_value_with_line_break_is_rejected` (PR #16) |
 | SR-06.5 | Limits | The code in `pykv/` imports only the Python standard library. | `test_sr_06_5_runtime_code_only_uses_the_standard_library` |
+| SR-06.6 | Inputs and outputs | `set` returns `True` once the record is written. `delete` returns `True` if the key existed and `False` if it did not. Added after issue #21. | `tests/test_confirmation.py` |
 
 ### US-05 — Append-only Historical Log with Tombstones
 
