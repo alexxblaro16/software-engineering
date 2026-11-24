@@ -139,6 +139,20 @@ print(db.get("greeting"))   # None (key no longer available)
 
 - Values must be strings with no line breaks. `__DELETED__` cannot be used as a value, because the log uses it to mark deleted keys (tombstones).
 
+- Values can contain commas. Each line of the log is `key,value`, and only the first comma separates the key from the value. That is why commas are forbidden in keys and allowed in values.
+
+- `get` on a key that does not exist returns `None`, like `dict.get`, instead of raising `KeyError`.
+
+The full list of rules, written as system requirements, is in section 9 of [BACKLOG.md](BACKLOG.md).
+
+### Data file and history
+
+The log is a plain UTF-8 text file that only grows: every `set` and every `delete` adds a line, even for a key that already exists. Opening the database reads the whole file to rebuild the index. In our experiment, 1,000,000 writes to a single key produced a 21.9 MB file that takes 0.43 s to open (section 11 of [BACKLOG.md](BACKLOG.md)). To repeat it:
+
+```bash
+python experiments/log_growth.py
+```
+
 
 ---
 
@@ -182,8 +196,12 @@ flake8           # check style and common errors
 │   ├── database.py  # Database class: in-memory hash index and set/get/delete
 │   └── log.py       # Log class: everything about the append-only log file
 ├── tests/           # Automated tests (pytest)
-│   └── test_db.py
-├── BACKLOG.md       # Product backlog: user stories and acceptance criteria
+│   ├── test_db.py
+│   ├── test_validation.py
+│   └── test_system_requirements.py
+├── experiments/     # Measurements that are not tests
+│   └── log_growth.py  # How much the log grows with a single key
+├── BACKLOG.md       # Product backlog: stories, system requirements, E1 closing and experiment
 ├── requirements.txt # Development dependencies (pytest, black, flake8)
 ├── .github/         # CI workflow (GitHub Actions) and CODEOWNERS
 ├── .gitignore       # Files ignored by Git (e.g. venv/, __pycache__/, data files)

@@ -209,3 +209,16 @@ def test_sr_03_5_opens_one_million_records_in_under_5_seconds(big_log):
     # Assert
     assert len(db.index) == LOG_SIZE
     assert elapsed < 5
+
+
+def test_sr_06_7_values_with_commas_survive_a_restart(tmp_path):
+    """SR-06.7: only the first comma separates the key from the value."""
+    # Arrange
+    path = tmp_path / "test_data.txt"
+    Database(path).set("address", "Calle Mayor, 1, Madrid")
+
+    # Act
+    value = Database(path).get("address")
+
+    # Assert
+    assert value == "Calle Mayor, 1, Madrid"
