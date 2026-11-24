@@ -512,3 +512,175 @@ Measured on Windows 11, Python 3.13, a laptop with an Intel i7-13620H.
 **What it shows:** the database holds one value, but the log keeps all 1,000,000 records (about 22 bytes each), and opening the database reads all of them. The file and the startup time grow with the number of writes, not with the number of keys. This is the first risk of section 8. Compaction would fix it, but it would delete history that the client asked to keep (R3), so it has to be agreed with the client first.
 
 We also saw that writing the 1,000,000 records took about 400 s (0.4 ms per `set`), because every `set` opens and closes the file.
+
+---
+
+## 12. Phase 2 Backlog (E2)
+
+In phase 2 the log stops being one file that grows forever (the first risk of section 8 and the experiment of section 11). It is split into **segments** with a maximum size, and closed segments are **merged** so that old versions of the same key stop taking space. E2 is delivered with the tag `v2.0` on Tuesday 15 December.
+
+### 12.1 User stories
+
+#### US-08 — Log Split Into Segments With a Maximum Size
+
+> **As** the person who runs PyKV on a server,
+> **I want** the log to be split into files with a maximum size,
+> **so that** no file grows without limit and old data can be compacted without touching the file that receives the writes.
+
+**Acceptance criteria**
+
+- **AC-08.1 — The active segment closes when it is full**
+  - **Given** an active segment that reaches the maximum size,
+  - **when** a `set` or a `delete` writes the record that fills it,
+  - **then** the segment is closed with the next number (`segment-000001.log`, `segment-000002.log`...) and the next writes go to a new, empty active segment.
+- **AC-08.2 — Closed segments are still read**
+  - **Given** a key whose last record is in a closed segment,
+  - **when** `get(key)` is called,
+  - **then** it returns that value, reading only that record.
+- **AC-08.3 — Restart in order**
+  - **Given** a key written in several segments, and maybe deleted in a newer one,
+  - **when** the database is opened again,
+  - **then** the index is rebuilt from the oldest segment to the newest, the active one last, and every key returns its newest value (or `None` if its newest record is a tombstone).
+- **AC-08.4 — E1 still works**
+  - **Given** the tests of E1,
+  - **when** they run with segments,
+  - **then** all of them pass without changes.
+
+#### US-09 — Automatic Merge With the Generation Rule
+
+> **As** the person who runs PyKV on a server,
+> **I want** closed segments to be merged automatically,
+> **so that** the disk does not fill up with old versions of the same key and startup does not get slower with every write.
+
+**Acceptance criteria**
+
+- **AC-09.1 — Generation rule**
+  - **Given** a segment that has just been closed,
+  - **when** the two newest closed segments have the same generation,
+  - **then** they are merged into one segment of the next generation, and this is repeated until the two newest have different generations.
+- **AC-09.2 — Range names**
+  - **Given** a merge of segments 3 and 4,
+  - **when** it finishes,
+  - **then** the result is called `segment-000003-000004.log`, and its generation can be read from the range (2 segments = generation 1, 4 segments = generation 2).
+- **AC-09.3 — Last value of each key**
+  - **Given** two segments with several records of the same key,
+  - **when** they are merged,
+  - **then** the result keeps only the newest record of each key, and `get` returns the same values before and after the merge.
+
+#### US-10 — Safe Merge: Tombstones and Interrupted Merges
+
+> **As** a user of the data,
+> **I want** a deleted key to stay deleted after any merge and any restart, and a crash in the middle of a merge not to lose or duplicate data,
+> **so that** I can trust what `get` returns.
+
+**Acceptance criteria**
+
+- **AC-10.1 — Tombstones are kept while older data exists**
+  - **Given** a merge that does not include the oldest segment,
+  - **when** a key's newest record is a tombstone,
+  - **then** the tombstone is copied to the merged segment. It is only dropped if the merge includes the oldest segment.
+- **AC-10.2 — Delete, merge, restart**
+  - **Given** a deleted key,
+  - **when** its segments are merged and the database is opened again,
+  - **then** `get(key)` returns `None`.
+- **AC-10.3 — A crash in the middle of a merge**
+  - **Given** a merge that stopped halfway (a temporary file, or the merged segment written but the old ones not deleted yet),
+  - **when** the database is opened again,
+  - **then** the temporary files and the segments covered by a range are deleted, and every key returns its newest value.
+
+#### US-11 — Sorted Segments With a Memtable and a Sparse Index
+
+> **As** the person who runs PyKV with many keys,
+> **I want** segments sorted by key, with a sparse index instead of one entry per key,
+> **so that** the index fits in memory on older machines.
+
+Optional for E2 (Daniel, S10). It changes the format of the segments, so if we do it we have to decide it before programming the merge.
+
+### 12.2 Prioritization (MoSCoW)
+
+| ID | Story | Priority (MoSCoW) | Points (proposal) |
+|----|-------|-------------------|-------------------|
+| US-08 | Log split into segments with a maximum size | Must | 5 |
+| US-09 | Automatic merge with the generation rule | Must | 8 |
+| US-10 | Safe merge: tombstones and interrupted merges | Must | 5 |
+| US-01 | Response in under 500 ms (from E1) | Should | 5 |
+| US-07 | Multi-platform, older machines and UTF-8 encoding (from E1) | Should | 5 |
+| US-11 | Sorted segments with a memtable and a sparse index | Could | 13 |
+| US-04 | Reliability against failures and integrity protection (from E1) | Won't (this time) | 8 |
+
+**MoSCoW check:** the Must stories (US-08, US-09 and US-10) are the three pieces that Daniel requires for E2. They add up to 18 of 49 points (37%), below the 60% limit. US-01 and US-07 stay as Should, as in E1. US-11 is Could because Daniel made it optional. US-04 stays Won't.
+
+### 12.3 Planning Poker
+
+Each member votes on their own with the Fibonacci scale (1, 2, 3, 5, 8, 13). Where the votes do not match, the agreed value is the one chosen by two of the three members, as in section 5.1. The points in 12.2 are a proposal until the three columns are filled in.
+
+| ID | Alejandro | Gabriel | Jorge | Agreed | Justification |
+|----|-----------|---------|-------|--------|---------------|
+| US-08 | 5 | | | | Close the active segment, read closed segments, rebuild in order |
+| US-09 | 8 | | | | Generation rule, range names and keeping the last value of each key |
+| US-10 | 5 | | | | Tombstone rule, temporary file with `os.replace`, cleanup on startup |
+| US-11 | 13 | | | | New segment format, memtable, sparse index and a different merge |
+
+### 12.4 How many sprints phase 2 needs
+
+Our velocity in E1 was **18 points per sprint** (section 10).
+
+| What we plan | Points | Sprints (points / 18, rounded up) |
+|--------------|--------|-----------------------------------|
+| Must (US-08, US-09, US-10) | 18 | 1 |
+| Must + Should (+ US-01, US-07) | 28 | 2 |
+| Everything except Won't (+ US-11) | 41 | 3 |
+
+The Must stories fit in one sprint, so that is the plan for E2. US-01 and US-07 go to a second sprint if there is time before 15 December. US-11 is left out of E2.
+
+### 12.5 Work order
+
+| Order | Story | Who | Branch | Starts from |
+|-------|-------|-----|--------|-------------|
+| 1 | US-08 | Gabriel | `feat/segments` | `main` |
+| 2 | US-09 and US-10 | Jorge | `feat/merge` | `feat/segments`, once it is merged |
+
+The merge needs the segments, so Jorge's branch starts when Gabriel's pull request is in `main`.
+
+### 12.6 System requirements for phase 2
+
+The maximum size and the merge rule are also written in the README, because they change how the database is used.
+
+| ID | Story | Type | Requirement | Checked by |
+|----|-------|------|-------------|------------|
+| SR-08.1 | US-08 | Limits | The active segment is closed when its size reaches 1 MiB (1,048,576 bytes). The size can be changed with `Database(path, max_segment_size=...)`. | `test_active_segment_closes_at_the_maximum_size`, `test_writes_continue_in_a_new_active_segment` |
+| SR-08.2 | US-08 | Inputs and outputs | The active segment is the file given to `Database`. Closed segments are in the folder `<file>.segments`, named `segment-000001.log`, `segment-000002.log`..., and a closed segment is never renamed. | `test_segment_names_keep_their_number_and_range` |
+| SR-08.3 | US-08 | Inputs and outputs | `get` reads the record of the key in the segment where the index says it is, without reading the other segments. | `test_get_reads_closed_segments` |
+| SR-08.4 | US-08 | Inputs and outputs | On startup, the index is rebuilt from the oldest closed segment to the newest, and the active segment last. | `test_restart_rebuilds_the_index_in_order`, `test_tombstone_in_a_newer_segment_survives_restart` |
+| SR-09.1 | US-09 | Inputs and outputs | After closing a segment, while the two newest closed segments have the same generation, they are merged into one. | `test_generation_rule` |
+| SR-09.2 | US-09 | Inputs and outputs | A merged segment is named after the range it replaces (`segment-000001-000004.log`). Its generation is log2 of the number of segments in the range. | `test_generation_comes_from_the_range` |
+| SR-09.3 | US-09 | Inputs and outputs | A merged segment keeps only the newest record of each key. | `test_merge_keeps_the_last_value_of_each_key` |
+| SR-09.4 | US-10 | Inputs and outputs | A tombstone is only dropped in a merge that includes the oldest closed segment. In any other merge, it is copied. | `test_tombstone_survives_merge_and_restart`, `test_merge_without_the_oldest_segment_keeps_the_tombstone` |
+| SR-09.5 | US-10 | Errors | A merge writes to a temporary file, calls `os.fsync` and renames it with `os.replace`, and only then deletes the old segments. On startup, temporary files and segments covered by a range are deleted. | `test_restart_cleans_up_an_interrupted_merge` |
+
+### 12.7 To agree with the client
+
+- **The merge deletes history.** In E1 the client asked to keep every insertion, modification and deletion (R3, US-05). A merge keeps only the last record of each key, so the old versions in closed segments disappear. The active segment still keeps everything. We have to ask the client if this is acceptable, or if the history has to be copied somewhere else before merging.
+- **The maximum size of 1 MiB** is our proposal. With the experiment of section 11 (21.9 MB for 1,000,000 writes), it means about 21 segments before merging.
+
+### 12.8 Roles for E2
+
+Daniel asked to give each role to someone who did not have it in E1, and to keep the roles until E2 is delivered. The team agrees on them and records them here.
+
+| Role | E2 |
+|------|----|
+| Product Owner | |
+| Scrum Master | |
+| Developers | |
+
+### 12.9 Lab sprint (24 November): review and retrospective
+
+To be filled in by the team: the sprint goal, whether it was met, what worked, what did not, and the improvement we choose for the next sprint.
+
+| | |
+|---|---|
+| Sprint goal | |
+| Was it met? | |
+| What worked | |
+| What did not work | |
+| Improvement chosen | |
